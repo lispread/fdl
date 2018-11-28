@@ -1,0 +1,16 @@
+
+
+target_sources(src/dloader/dl_common.c)
+target_sources(src/dloader/dl_nand_operate.c)
+target_sources(src/dloader/dl_stdio.c)
+target_sources(src/dloader/sparse_crc32.c)
+target_sources(src/dloader/dl_channel.c)
+target_sources(src/dloader/dl_crc.c)
+target_sources(src/dloader/dl_ubi.c)
+target_sources(src/dloader/packet.c)
+target_sources(src/dloader/root_inspect.c)
+target_sources(src/dloader/dl_cmd_proc.c)
+target_sources(src/dloader/dl_mtdparts.c)
+target_sources(src/dloader/dl_operate.c)
+target_sources(src/dloader/parsemtdparts.c)
+target_sources(src/dloader/sparse_img.c)
