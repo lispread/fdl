@@ -91,7 +91,7 @@ FDL_ChannelHandler_T  gUart0Channel = {
 
 void main(void)
 {
-	SYS_LOG_WRN("Unisoc fdl\n");
+	printk("UNISOC fdl.\n");
 	uart_fdl_dev = device_get_binding(UART_0);
 	if (uart_fdl_dev == NULL) {
 		SYS_LOG_WRN("uart_fdl_dev is NULL %x\n",uart_fdl_dev);
@@ -99,6 +99,4 @@ void main(void)
 	gUart0Channel.priv = uart_fdl_dev;
 
 	do_download();
-
-	while(1) {}
 }
