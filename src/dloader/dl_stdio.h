@@ -1,6 +1,11 @@
-#ifndef __FDL_STDIO_H_
-#define ___FDL_STDIO_H
+/*
+ * Copyright (c) 2018, UNISOC Incorporated
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
+#ifndef _FDL_STDIO_H_
+#define _FDL_STDIO_H_
 
 #ifndef NULL
 #ifdef __cplusplus

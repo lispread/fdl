@@ -1,22 +1,14 @@
 /*
- * Copyright (C) 2014 Spreadtrum Communications Inc.
+ * Copyright (c) 2018, UNISOC Incorporated
  *
- * This software is licensed under the terms of the GNU General Public
- * License version 2, as published by the Free Software Foundation, and
- * may be copied, distributed, and modified under those terms.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * Authors: Justin Wang <justin.wang@spreadtrum.com>
+ * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef DL_CMD_DEF_H
-#define DL_CMD_DEF_H
+#ifndef _DL_COMMAND_H_
+#define _DL_COMMADN_H_
+#include "dl_packet.h"
 
-typedef enum dl_cmd_type {
+enum dl_cmd_type {
     BSL_PKT_TYPE_MIN = 0,                       /* the bottom of the DL packet type range */
     BSL_CMD_TYPE_MIN = BSL_PKT_TYPE_MIN,        /* 0x0 */
 
@@ -108,7 +100,7 @@ typedef enum dl_cmd_type {
     BSL_REP_READ_REFINFO=0xB1,
     BSL_UNSUPPORTED_CMD = 0xFE,
     BSL_PKT_TYPE_MAX
-}dl_cmd_type_t ;
+};
 
 #define SEND_ERROR_RSP(x)         \
     {                       \
@@ -117,4 +109,62 @@ typedef enum dl_cmd_type {
     }
 
 
-#endif /* DL_CMD_DEF_H */
+
+#define PARTITION_SIZE_LENGTH          (4)
+#define MAX_PARTITION_NAME_SIZE   (36)
+#define GAP_SIZE_LENGTH   (8)
+#define PARTITION_SIZE_LENGTH_V1  (8)
+#define REPARTITION_HEADER_MAGIC 0x3A726170
+#define BIT64_DATA_LENGTH 0x58
+#define BIT64_READ_MIDST_LENGTH 0x0C
+
+#define REPARTITION_UNIT_LENGTH    (MAX_PARTITION_NAME_SIZE *2 + PARTITION_SIZE_LENGTH)
+#define REPARTITION_UNIT_LENGTH_V1    (MAX_PARTITION_NAME_SIZE *2 +  PARTITION_SIZE_LENGTH_V1 + GAP_SIZE_LENGTH)
+#define REF_INFO_OFF 0XFA000
+#define CONFIG_SYS_LOAD_ADDR 0x120000
+typedef enum OPERATE_STATUS {
+	OPERATE_SUCCESS = 1,
+	OPERATE_SYSTEM_ERROR,
+	OPERATE_DEVICE_INIT_ERROR,
+	OPERATE_INVALID_DEVICE_SIZE,
+	OPERATE_INCOMPATIBLE_PART,
+	OPERATE_INVALID_ADDR,
+	OPERATE_INVALID_SIZE,
+	OPERATE_WRITE_ERROR,
+	OPERATE_CHECKSUM_DIFF,
+	OPERATE_IGNORE
+} OPERATE_STATUS;
+
+typedef struct _REPARTITION_TABLE_INFO
+{
+	unsigned char version;
+	unsigned char unit;
+	unsigned char table_count;
+	unsigned char reserved;
+	unsigned int     table_tag;
+	unsigned short     table_offset;
+	unsigned short     table_size;
+} REPARTITION_TABLE_INFO;
+
+int dl_cmd_write_connect(struct dl_pkt * packet, void *arg);
+int dl_cmd_write_start(struct dl_pkt * packet, void *arg);
+int dl_cmd_write_midst(struct dl_pkt * packet, void *arg);
+int dl_cmd_write_end(struct dl_pkt * packet, void *arg);
+int dl_cmd_read_start(struct dl_pkt * packet, void *arg);
+int dl_cmd_read_midst(struct dl_pkt * packet, void *arg);
+int dl_cmd_read_end(struct dl_pkt * packet, void *arg);
+int dl_cmd_erase(struct dl_pkt * packet, void *arg);
+int dl_cmd_repartition(struct dl_pkt * pakcet, void *arg);
+int dl_cmd_reboot (struct dl_pkt *pakcet, void *arg);
+int dl_powerdown_device(struct dl_pkt *packet, void *arg);
+int dl_cmd_read_mcptype(struct dl_pkt * packet, void *arg);
+int dl_cmd_check_rootflag(struct dl_pkt * packet, void *arg);
+int dl_cmd_get_uid(struct dl_pkt *packet, void *arg);
+int dl_cmd_get_chip_uid(struct dl_pkt *packet, void *arg);
+int dl_cmd_get_uid_x86(struct dl_pkt *packet, void *arg);
+int dl_cmd_end_process(struct dl_pkt *packet, void *arg);
+int dl_cmd_read_ref_info(struct dl_pkt *packet, void *arg);
+int dl_cmd_disable_hdlc(struct dl_pkt *packet, void *arg);
+int dl_cmd_write_datetime(struct dl_pkt *packet, void *arg);
+int dl_cmd_init(void);
+#endif /*DL_CMD_PROC_H */

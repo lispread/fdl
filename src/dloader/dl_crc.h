@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2018, UNISOC Incorporated
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #ifndef FDL_CRC_H
 #define FDL_CRC_H
 #ifdef __cplusplus
@@ -5,7 +11,6 @@ extern   "C"
 {
 #endif
 
-#include "dl_cmd_def.h"
 //////////////////////////////////////////////////////////
 //CRC
 #define CRC_16_POLYNOMIAL       0x1021

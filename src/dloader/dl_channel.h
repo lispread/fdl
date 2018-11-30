@@ -1,22 +1,28 @@
-#ifndef __FDL_CHANNEL_H_
-#define __FDL_CHANNEL_H_
+/*
+ * Copyright (c) 2018, UNISOC Incorporated
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
+#ifndef _DL_CHANNEL_H_
+#define _DL_CHANNEL_H_
 
-typedef struct FDL_ChannelHandler
+struct dl_ch
 {
-    int (*Open) (struct FDL_ChannelHandler *channel, unsigned int  baudrate);
-    int (*Read) (struct FDL_ChannelHandler *channel, const unsigned char *buf, unsigned int  len);
-    char (*GetChar) (struct FDL_ChannelHandler *channel);
-    int (*GetSingleChar) (struct FDL_ChannelHandler *channel);
-    int (*Write) (struct FDL_ChannelHandler *channel, const unsigned char *buf, unsigned int  len);
-    int (*PutChar) (struct FDL_ChannelHandler *channel, const unsigned char ch);
-    int (*SetBaudrate) (struct FDL_ChannelHandler *channel, unsigned int  baudrate);
-    int (*DisableHDLC) (struct FDL_ChannelHandler *channel, int  disabled);
-    int (*Close) (struct FDL_ChannelHandler *channel);
-    void   *priv;
-} FDL_ChannelHandler_T;
+    int (*open) (struct dl_ch *channel, unsigned int  baudrate);
+    int (*read) (struct dl_ch *channel, const unsigned char *buf, unsigned int  len);
+    char (*get_char) (struct dl_ch *channel);
+    int (*get_sigle_char) (struct dl_ch *channel);
+    int (*write) (struct dl_ch *channel, const unsigned char *buf, unsigned int  len);
+    int (*put_char) (struct dl_ch *channel, const unsigned char ch);
+    int (*set_baudrate) (struct dl_ch *channel, unsigned int  baudrate);
+    int (*disable_hdlc) (struct dl_ch *channel, int  disabled);
+    int (*close) (struct dl_ch *channel);
+    void *priv;
+};
 
-struct FDL_ChannelHandler *FDL_ChannelGet(void);
-struct FDL_ChannelHandler *FDL_USBChannel(void);
+struct dl_ch *dl_channel_get(void);
+struct dl_ch *dl_channel_init(void);
+//struct dl_ch *FDL_USBChannel(void);
 
 #endif

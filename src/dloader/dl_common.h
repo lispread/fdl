@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2018, UNISOC Incorporated
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #ifndef _DL_COMMON_
 #define _DL_COMMON_
 
