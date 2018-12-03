@@ -7,9 +7,9 @@
 #include <zephyr.h>
 #include <logging/sys_log.h>
 
-#include "dloader/dl_channel.h"
-#include "dloader/dl_command.h"
-#include "dloader/dl_packet.h"
+#include "dl_channel.h"
+#include "dl_command.h"
+#include "dl_packet.h"
 
 #ifdef SYS_LOG_DOMAIN
 #undef SYS_LOG_DOMAIN

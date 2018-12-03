@@ -9,8 +9,10 @@
 #include <string.h>
 #include <uart.h>
 
-#include "dl_channel.h"
+#include "dl_crc.h"
+#include "dl_command.h"
 #include "dl_packet.h"
+#include "dl_channel.h"
 
 #define BOOT_FLAG_USB                   (0x5A)
 #define BOOT_FLAG_UART1                 (0x6A)
@@ -28,13 +30,14 @@ struct device *uart_dev;
 
 static int uart_write(struct dl_ch  *channel, const unsigned char *buf, unsigned int len)
 {
-	int i;
 	struct device *priv = (struct device*)channel->priv;
-	printk("uart write: %x",0xaa);
+#if 0
+	int i;
 	for (i=0; i<len; i++) {
 		printk(" %x",buf[i]);
 	}
-	printk(" %x\n",0x55);
+	printk("\n");
+#endif
 	return uart_fifo_fill(priv,buf,len);
 }
 
@@ -52,9 +55,7 @@ static struct dl_ch uart_channel = {
 	.put_char = uart_put_char,
 };
 
-#define MAX_BUF_LEN	(0x4000)
-static u8_t buf[MAX_BUF_LEN];
-static struct dl_pkt recv_pkt;
+static u8_t buf[MAX_PKT_SIZE];
 
 void uart_rx_handle(struct dl_ch *ch)
 {
@@ -65,11 +66,16 @@ void uart_rx_handle(struct dl_ch *ch)
 	u32_t len;
 	u32_t i;
 
-	len = uart_fifo_read(dev, &buf[offset], MAX_BUF_LEN);
+	len = uart_fifo_read(dev, &buf[offset], MAX_PKT_SIZE);
 	offset += len;
+	if (offset > MAX_PKT_SIZE) {
+		printk("Data packet overflow!\n");
+		dl_send_ack(BSL_REP_OPERATION_FAILED);
+		return;
+	}
 
 	for (i = 1; i < offset; i++) {
-		if (buf[i] == 0x7e) {
+		if (buf[i] == HDLC_FLAG) {
 			pkt_complete = true;
 			break;
 		}
@@ -77,7 +83,7 @@ void uart_rx_handle(struct dl_ch *ch)
 
 	if (!pkt_complete) return;
 
-	printk("uart read %d bytes: \n", offset);
+	printk("uart read 0x%x bytes: \n", offset);
 	if (offset < 32) {
 		for (i = 0; i < offset; i++) {
 			printk("%02x ", buf[i]);
@@ -86,14 +92,8 @@ void uart_rx_handle(struct dl_ch *ch)
 		printk("\n");
 	}
 
-	/* remove 0x7E */
-	offset -= 2;
-
-	recv_pkt.data_size = offset;
-	memcpy(&recv_pkt.body, buf + 1, offset);
-
-	dl_pkt_handler(&recv_pkt);
-
+	/* remove 0x7E at the head and tail. */
+	dl_pkt_handler(buf + 1, offset - 2);
 	offset = 0;
 }
 

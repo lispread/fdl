@@ -7,6 +7,7 @@
 #include <zephyr.h>
 #include <string.h>
 #include <logging/sys_log.h>
+#include <flash.h>
 
 #include "dl_stdio.h"
 #include "dl_command.h"
@@ -66,27 +67,30 @@ static __inline u32_t convert_operate_status(int err)
 	}
 }
 
-
-static __inline void _send_reply(uint32_t err)
+int dl_cmd_reply(uint32_t err)
 {
-	dl_send_ack (convert_operate_status(err));
-	return;
+	dl_send_ack(convert_operate_status(err));
+
+	if (err == OPERATE_SUCCESS) return 0;
+
+	return -1;
 }
 
-int _parse_repartition_header(u8_t * data, REPARTITION_TABLE_INFO * info, u8_t ** list)
+#if 0
+int _parse_repartition_header(u8_t * data, repartition_table_info * info, u8_t ** list)
 {
 	u8_t *  pointer = data;
 	/*magic number must be "par:", otherwise it must be the old version packet(version 0)*/
-	if (*(uint32_t*)data != REPARTITION_HEADER_MAGIC) {
+	if (*(uint32_t*)data != repartition_header_magic) {
 		info->version = 0;
-		/*default unit in version 0 is MB*/
+		/*default unit in version 0 is mb*/
 		info->unit = 0;
 		*list = data;
 		return 0;
 	}
 
 	/*   header format:
-	  *	|  magic(4Byte) | Version(1Byte) | Unit(1Byte) | table count(1Byte)|Reserved(1Byte) |
+	  *	|  magic(4byte) | version(1byte) | unit(1byte) | table count(1byte)|reserved(1byte) |
 	  *	table tag(4) | table offset(2)| table size(2)|
 	  */
 	pointer += 4;
@@ -105,11 +109,12 @@ int _parse_repartition_header(u8_t * data, REPARTITION_TABLE_INFO * info, u8_t *
 	info->table_size = *(unsigned short *)pointer;
 	pointer += 2;
 	printk("%s: version(%d),unit(%d), table_count(%d), table_tag(%d), table_offset(%d), table_size(%d)\n",
-		__FUNCTION__, info->version, info->unit, info->table_count, info->table_tag, info->table_offset,
+		__function__, info->version, info->unit, info->table_count, info->table_tag, info->table_offset,
 		info->table_size);
 	*list = pointer;
 	return 0;
 }
+#endif
 struct spi_flash *sf = NULL;
 static uint32_t start_addr=0;
 static uint32_t partition_size=0;
@@ -138,14 +143,13 @@ int dl_write_sf(uint32_t offset,uint32_t size,char *data)
 	return ret;
 }
 
-int dl_cmd_write_connect(struct dl_pkt *packet, void *arg)
+int dl_cmd_connect(struct dl_pkt *packet, void *arg)
 {
-	printk("dl_cmd_write_connect \n");
-	dl_send_ack(BSL_REP_ACK);
-	return 0;
+	printk("dl_cmd_connect.\n");
+	return dl_cmd_reply(OPERATE_SUCCESS);
 }
 
-int dl_cmd_write_start (struct dl_pkt *packet, void *arg)
+int dl_cmd_start(struct dl_pkt *packet, void *arg)
 {
 	memcpy(&start_addr, (void *)(packet->body.content), sizeof(start_addr));
 	memcpy(&partition_size, (void *)(packet->body.content+sizeof(start_addr)), sizeof(start_addr));
@@ -156,42 +160,50 @@ int dl_cmd_write_start (struct dl_pkt *packet, void *arg)
 	printk("start_addr %x\n",start_addr);
 	printk("partition_size %d\n",partition_size);
 
-	_send_reply(1);
-
-	return 0;
+	return dl_cmd_reply(OPERATE_SUCCESS);
 }
 
-
-static char *s_iram_address = (char *)CONFIG_SYS_LOAD_ADDR;
-
-int dl_cmd_write_midst(struct dl_pkt *packet, void *arg)
+int dl_cmd_midst(struct dl_pkt *packet, void *arg)
 {
-	memcpy(s_iram_address, (void *)(packet->body.content), packet->body.size);
-	s_iram_address += packet->body.size;
-	_send_reply(1);
-	//printk("dl_cmd_write_midst %x\n",s_iram_address); //every packet
-	return 0;
+	static u8_t *data_addr = (u8_t *)CONFIG_SYS_LOAD_ADDR;
+	memcpy(data_addr, (void *)(packet->body.content), packet->body.size);
+	data_addr += packet->body.size;
+	return dl_cmd_reply(OPERATE_SUCCESS);
 }
 
-int dl_cmd_write_end (struct dl_pkt *packet, void *arg)
+int dl_cmd_end(struct dl_pkt *packet, void *arg)
 {
-	//int32_t op_res = 1;
-	//int32_t offset;
-	s_iram_address = (char *)CONFIG_SYS_LOAD_ADDR;
-	printk("dl_cmd_write_end %p\n",s_iram_address);
-#if 0
-	offset = start_addr - NORFLASH_ADDRESS;
-	print_addr(offset);
-	op_res = dl_write_sf(offset,partition_size,(char *)CONFIG_SYS_LOAD_ADDR);
-	if(sf){
-	    /* spi_flash_free(sf); */
-	    sf = NULL;
+	int ret;
+	struct device *dev = device_get_binding(FLASH_LABEL);
+	u8_t *data_addr = (u8_t *)CONFIG_SYS_LOAD_ADDR;
+
+	printk("dl_cmd_write_end %p\n", data_addr);
+	start_addr -= 0x2000000;
+	if (dev == NULL) {
+		printk("Can not open device: %s.\n", FLASH_LABEL);
+		return dl_cmd_reply(OPERATE_SYSTEM_ERROR);
 	}
-	_send_reply(op_res);
-#endif
-	_send_reply(1);
+	printk("Open device %s success.\n", FLASH_LABEL);
+	flash_write_protection_set(dev, false);
 
-	return 0;
+	printk("Erase flash address: 0x%x size: 0x%x.\n", start_addr, partition_size);
+	ret = flash_erase(dev, start_addr, partition_size);
+	if (ret) {
+		printk("Erase flash failed.\n");
+		return dl_cmd_reply(OPERATE_SYSTEM_ERROR);
+	}
+	printk("Erase success.\n");
+
+	printk("Write flash start...\n");
+	ret = flash_write(dev, start_addr, data_addr, partition_size);
+	if (ret) {
+		printk("wirte flash failed.\n");
+		return dl_cmd_reply(OPERATE_SYSTEM_ERROR);
+	}
+	printk("Write success.\n");
+	flash_write_protection_set(dev, true);
+
+	return dl_cmd_reply(OPERATE_SUCCESS);
 }
 
 int dl_cmd_init(void)

@@ -146,10 +146,11 @@ typedef struct _REPARTITION_TABLE_INFO
 	unsigned short     table_size;
 } REPARTITION_TABLE_INFO;
 
-int dl_cmd_write_connect(struct dl_pkt * packet, void *arg);
-int dl_cmd_write_start(struct dl_pkt * packet, void *arg);
-int dl_cmd_write_midst(struct dl_pkt * packet, void *arg);
-int dl_cmd_write_end(struct dl_pkt * packet, void *arg);
+int dl_cmd_reply(uint32_t err);
+int dl_cmd_connect(struct dl_pkt * packet, void *arg);
+int dl_cmd_start(struct dl_pkt * packet, void *arg);
+int dl_cmd_midst(struct dl_pkt * packet, void *arg);
+int dl_cmd_end(struct dl_pkt * packet, void *arg);
 int dl_cmd_read_start(struct dl_pkt * packet, void *arg);
 int dl_cmd_read_midst(struct dl_pkt * packet, void *arg);
 int dl_cmd_read_end(struct dl_pkt * packet, void *arg);
