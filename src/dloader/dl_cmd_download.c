@@ -19,34 +19,24 @@
 #include "dl_cmd_common.h"
 #include "dl_cmd_proc.h"
 
-static struct dl_cmd *cmdlist = NULL;
-static int index=0;
-
 typedef struct _DA_INFO_T_
 {
 	uint32_t   dwVersion;
 	bool    bDisableHDLC; //0: Enable hdl; 1:Disable hdl
 }DA_INFO_T;
 
+struct dl_cmd dl_cmds[] = {
+	{BSL_CMD_CONNECT, dl_cmd_write_connect},
+	{BSL_CMD_START_DATA, dl_cmd_write_start},
+	{BSL_CMD_MIDST_DATA, dl_cmd_write_midst},
+	{BSL_CMD_END_DATA, dl_cmd_write_end},
+	{0, NULL}
+};
 
-void dl_cmd_register(enum dl_cmd_type type,
-	int (*handle)(struct dl_packet *pkt, void *arg),struct dl_cmd *data)
-{
-	struct dl_cmd *cmd = (void *)0;
-
-	cmd = &data[index];
-
-	index++;
-	if (cmd) {
-		cmd->type = type;
-		cmd->handle = (void *)handle;
-		cmd->next = cmdlist;
-		cmdlist = cmd;
-	}
-	return;
-}
 void dl_cmd_handler(void)
 {
+	u32_t i;
+	u32_t cmds_cnt = sizeof(dl_cmds) / sizeof(struct dl_cmd);
 	struct dl_cmd *cmd;
 	struct dl_packet *pkt;
 	printk("%s:enter\n", __FUNCTION__);
@@ -55,23 +45,15 @@ void dl_cmd_handler(void)
 		//printk("%x %x\n ", pkt->body.type,pkt->body.size);
 		pkt->body.type = (pkt->body.type >> 8 | pkt->body.type << 8);
 		pkt->body.size = (pkt->body.size >> 8 | pkt->body.size << 8);
-		for (cmd = cmdlist; cmd; cmd = cmd->next) {
-			if(cmd->type != pkt->body.type)
-				continue;
-
-			cmd->handle((void *)pkt,NULL);
-			dl_free_packet(pkt);
-
-		/*
-		 * in for(;;) loop, there should be no other log except handle func,
-		 * otherwise common_raw_write() will be called all the time and will
-		 * slow the download speed
-		 */
-			//write_log();
-			break;
+		for (i = 0, cmd = dl_cmds; i < cmds_cnt; i++, cmd++) {
+			if ((pkt->body.type == cmd->type) && (cmd->handle != NULL)) {
+				cmd->handle(pkt, NULL);
+				dl_free_packet(pkt);
+				break;
+			}
 		}
 		/* cannot found the cmd in cmdlist */
-		if (NULL == cmd){
+		if (NULL == cmd->handle){
 			dl_send_ack(BSL_UNSUPPORTED_CMD);
 			dl_free_packet(pkt);
 		}
@@ -82,18 +64,11 @@ const char fdl_version_string[] = {"SPRD3"};
 
 int do_download()
 {
-	struct dl_cmd cmd_store[5];
 	dl_packet_t ack_packet;
 	DA_INFO_T Da_Info;
 
 	printk("%s:enter\n", __FUNCTION__);
 	dl_packet_init ();
-
-	/* register all cmd process functions */
-	dl_cmd_register(BSL_CMD_CONNECT, dl_cmd_write_connect,cmd_store);
-	dl_cmd_register(BSL_CMD_START_DATA, dl_cmd_write_start,cmd_store);
-	dl_cmd_register(BSL_CMD_MIDST_DATA, dl_cmd_write_midst,cmd_store);
-	dl_cmd_register(BSL_CMD_END_DATA, dl_cmd_write_end,cmd_store);
 
 	/* uart download doesn't supoort disable hdlc, so need check it */
 	if (FDL_get_DisableHDLC() == NULL) {

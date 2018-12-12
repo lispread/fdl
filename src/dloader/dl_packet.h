@@ -24,6 +24,9 @@
 
 #define PACKET_MAX_NUM    3
 
+#define	FDL_DEFAULT_HDLC_FORMAT	0
+#define	FDL_NONE_HDLC_FORMAT	1
+
 typedef enum
 {
     PKT_NONE = 0,
@@ -52,7 +55,6 @@ typedef struct dl_packet {
 }dl_packet_t;
 
 struct dl_cmd {
-	struct dl_cmd *next;
 	enum dl_cmd_type type;
 	int (*handle)(struct dl_packet *pkt, void *arg);
 };

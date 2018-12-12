@@ -5,7 +5,7 @@
 typedef struct FDL_ChannelHandler
 {
     int (*Open) (struct FDL_ChannelHandler *channel, unsigned int  baudrate);
-    int (*Read) (struct FDL_ChannelHandler *channel, const unsigned char *buf, unsigned int  len);
+    int (*Read) (struct FDL_ChannelHandler *channel, unsigned char *buf, unsigned int  len);
     char (*GetChar) (struct FDL_ChannelHandler *channel);
     int (*GetSingleChar) (struct FDL_ChannelHandler *channel);
     int (*Write) (struct FDL_ChannelHandler *channel, const unsigned char *buf, unsigned int  len);
@@ -17,5 +17,5 @@ typedef struct FDL_ChannelHandler
 } FDL_ChannelHandler_T;
 
 struct FDL_ChannelHandler *FDL_ChannelGet(void);
-
+extern int dl_channel_init();
 #endif

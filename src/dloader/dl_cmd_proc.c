@@ -6,6 +6,10 @@
 
 #include "dl_cmd_proc.h"
 #include "dl_crc.h"
+#include "dl_cmd_common.h"
+
+static uint32_t start_addr=0;
+static uint32_t partition_size=0;
 
 static __inline dl_cmd_type_t convert_operate_status(int err)
 {
@@ -77,10 +81,6 @@ int _parse_repartition_header(u8_t * data, REPARTITION_TABLE_INFO * info, u8_t *
 	*list = pointer;
 	return 0;
 }
-struct spi_flash *sf = NULL;
-static uint32_t start_addr=0;
-static uint32_t partition_size=0;
-#define NORFLASH_ADDRESS 0x2000000
 
 int dl_cmd_write_connect(dl_packet_t *packet, void *arg)
 {
@@ -99,7 +99,7 @@ int dl_cmd_write_start (dl_packet_t *packet, void *arg)
 	start_addr = EndianConv_32(start_addr);
 	partition_size = EndianConv_32(partition_size);
 
-	_send_reply(1);
+	_send_reply(OPERATE_SUCCESS);
 	return 0;
 }
 
@@ -110,14 +110,14 @@ int dl_cmd_write_midst(dl_packet_t *packet, void *arg)
 {
 	memcpy(s_iram_address, (void *)(packet->body.content), packet->body.size);
 	s_iram_address += packet->body.size;
-	_send_reply(1);
+	_send_reply(OPERATE_SUCCESS);
 	//printk("dl_cmd_write_midst %x ",s_iram_address); //every packet
 	return 0;
 }
 
 int dl_cmd_write_end (dl_packet_t *packet, void *arg)
 {
-	int32_t  ret,op_res = 1;
+	int32_t  ret,op_res = OPERATE_SUCCESS;
 	int32_t offset;
 	struct device *dev = device_get_binding(FLASH_LABEL);
 

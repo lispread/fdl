@@ -8,6 +8,7 @@
 #define NV_VERSION		(101)
 #define NV_HEAD_LEN	(512)
 
+#define NORFLASH_ADDRESS 0x2000000
 #define BOOTLOADER_HEADER_OFFSET 0x20
 
 #define PART_SAME 1
@@ -123,4 +124,5 @@ typedef enum dl_cmd_type {
         while(1);           \
     }
 
+extern int do_download();
 #endif

@@ -8,16 +8,15 @@
 #define BOOT_FLAG_USB                   (0x5A)
 #define BOOT_FLAG_UART1                 (0x6A)
 #define BOOT_FLAG_UART0                 (0x7A)
-
+#define UART_0			"UART_0"
 
 /******************************************************************************/
 //  Description:    find a useable channel
 //  Global resource dependence:
-//  Author:         junqiang.wang
+//  Author:         
 //  Note:
 /******************************************************************************/
-//extern struct FDL_ChannelHandler gUart0Channel, gUart1Channel;
-//struct FDL_ChannelHandler gUSBChannel;
+struct device *uart_fdl_dev;
 
 static int sprd_read (struct FDL_ChannelHandler  *channel, unsigned char *buf, unsigned int len)
 {
@@ -65,7 +64,7 @@ static int sprd_putChar (struct FDL_ChannelHandler  *channel, const unsigned cha
 
 FDL_ChannelHandler_T  gUart0Channel = {
     .Open = NULL,
-    .Read = NULL,
+    .Read = sprd_read,
     .GetChar = sprd_getChar,
     .GetSingleChar = sprd_getSingleChar,
     .Write = sprd_write,
@@ -78,4 +77,20 @@ FDL_ChannelHandler_T  gUart0Channel = {
 struct FDL_ChannelHandler *FDL_ChannelGet()
 {
     return &gUart0Channel;
+}
+
+int dl_channel_init()
+{
+	struct FDL_ChannelHandler *dl_Channel;
+	printk("Unisoc uart\n");
+	uart_fdl_dev = device_get_binding(UART_0);
+	if (uart_fdl_dev == NULL) {
+		printk("uart_fdl_dev is NULL\n");
+        return -1;
+	}
+
+	dl_Channel = FDL_ChannelGet();
+	dl_Channel->priv = uart_fdl_dev;
+
+    return 0;
 }

@@ -6,22 +6,16 @@
 #include "dl_channel.h"
 
 int act_as_romcode;
-extern void dl_send_ack (dl_cmd_type_t pkt_type);
-void FDL_PacketDoIdle (void);
-
 int message_format;
 
-#define	FDL_DEFAULT_HDLC_FORMAT	0
-#define	FDL_NONE_HDLC_FORMAT	1
-
 struct FDL_ChannelHandler *gFdlUsedChannel;
-struct FDL_ChannelHandler *gFdlPrintChannel;
 
 static dl_packet_t  packet[ PACKET_MAX_NUM ];
-
 static dl_packet_t *packet_free_list;
 static dl_packet_t *packet_completed_list;
 static dl_packet_t *packet_receiving;
+
+void FDL_PacketDoIdle (void);
 
 void dl_packet_init (void)
 {
@@ -128,8 +122,6 @@ void FDL_PacketDoIdle (void)
 			dl_free_packet (packet_ptr);
 			printk("data_size error : datasize = %d  MAX_PKT_SIZE = %d\n",
 				packet_ptr->data_size, MAX_PKT_SIZE);
-			printk("\n%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
-			printk("data_size error");
 			printk("\n%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 			SEND_ERROR_RSP (BSL_REP_VERIFY_ERROR)
 			//return;

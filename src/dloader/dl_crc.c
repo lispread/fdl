@@ -1,6 +1,6 @@
-#include "dl_crc.h"
 #include <zephyr.h>
 #include "dl_cmd_common.h"
+#include "dl_crc.h"
 
 #ifdef __cplusplus
 extern   "C"
