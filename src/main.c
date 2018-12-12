@@ -1,40 +1,37 @@
 /*
- * Copyright (c) 2018, UNISOC Incorporated
- *
  * SPDX-License-Identifier: Apache-2.0
  */
 
 #include <zephyr.h>
-#include <logging/sys_log.h>
+#include <misc/printk.h>
+#include <device.h>
+#include <uart.h>
 
-#include "dl_channel.h"
-#include "dl_command.h"
-#include "dl_packet.h"
+#include "dloader/dl_channel.h"
 
 #ifdef SYS_LOG_DOMAIN
 #undef SYS_LOG_DOMAIN
 #endif
 #define SYS_LOG_DOMAIN	"UNISOC"
 
+#define UART_0			"UART_0"
+struct device *uart_fdl_dev;
+
+extern int do_download();
+
 void main(void)
 {
-	int ret;
-	struct dl_ch *ch;
-	printk("UNISOC fdl.\n");
-
-	ch = dl_channel_init();
-	if (ch == NULL) {
-		printk("Init channel failed.\n");
-		return;
+	struct FDL_ChannelHandler *dl_Channel;
+	printk("Unisoc fdl\n");
+	uart_fdl_dev = device_get_binding(UART_0);
+	if (uart_fdl_dev == NULL) {
+		printk("uart_fdl_dev is NULL\n");
 	}
 
-	dl_packet_init(ch);
-	
-	ret = dl_cmd_init();
-	if (ret) {
-		printk("Init command failed.\n");
-		return;
-	}
+	dl_Channel = FDL_ChannelGet();
+	dl_Channel->priv = uart_fdl_dev;
 
-	printk("start download...\n");
+	do_download();
+
+	while(1) {}
 }
