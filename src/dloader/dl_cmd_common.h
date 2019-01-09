@@ -1,14 +1,30 @@
-/*
- * Copyright (c) 2018, UNISOC Incorporated
- *
- * SPDX-License-Identifier: Apache-2.0
- */
+#ifndef _DL_COMMON_
+#define _DL_COMMON_
 
-#ifndef _DL_COMMAND_H_
-#define _DL_COMMADN_H_
-#include "dl_packet.h"
+#include <zephyr.h>
 
-enum dl_cmd_type {
+/*loader_common.h has the same define*/
+#define NV_HEAD_MAGIC	(0x00004e56)
+#define NV_VERSION		(101)
+#define NV_HEAD_LEN	(512)
+
+#define NORFLASH_ADDRESS 0x2000000
+#define BOOTLOADER_HEADER_OFFSET 0x20
+
+#define PART_SAME 1
+#define PART_DIFF   0
+#define PART_FAIL   -1
+#define PART_FATAL_ERR -2
+#define _LITTLE_ENDIAN 1
+
+typedef struct _NV_HEADER {
+	uint32_t magic;
+	uint32_t len;
+	uint32_t checksum;
+	uint32_t version;
+} nv_header_t;
+
+typedef enum dl_cmd_type {
     BSL_PKT_TYPE_MIN = 0,                       /* the bottom of the DL packet type range */
     BSL_CMD_TYPE_MIN = BSL_PKT_TYPE_MIN,        /* 0x0 */
 
@@ -100,7 +116,7 @@ enum dl_cmd_type {
     BSL_REP_READ_REFINFO=0xB1,
     BSL_UNSUPPORTED_CMD = 0xFE,
     BSL_PKT_TYPE_MAX
-};
+}dl_cmd_type_t ;
 
 #define SEND_ERROR_RSP(x)         \
     {                       \
@@ -108,64 +124,5 @@ enum dl_cmd_type {
         while(1);           \
     }
 
-
-
-#define PARTITION_SIZE_LENGTH          (4)
-#define MAX_PARTITION_NAME_SIZE   (36)
-#define GAP_SIZE_LENGTH   (8)
-#define PARTITION_SIZE_LENGTH_V1  (8)
-#define REPARTITION_HEADER_MAGIC 0x3A726170
-#define BIT64_DATA_LENGTH 0x58
-#define BIT64_READ_MIDST_LENGTH 0x0C
-
-#define REPARTITION_UNIT_LENGTH    (MAX_PARTITION_NAME_SIZE *2 + PARTITION_SIZE_LENGTH)
-#define REPARTITION_UNIT_LENGTH_V1    (MAX_PARTITION_NAME_SIZE *2 +  PARTITION_SIZE_LENGTH_V1 + GAP_SIZE_LENGTH)
-#define REF_INFO_OFF 0XFA000
-#define CONFIG_SYS_LOAD_ADDR 0x120000
-typedef enum OPERATE_STATUS {
-	OPERATE_SUCCESS = 1,
-	OPERATE_SYSTEM_ERROR,
-	OPERATE_DEVICE_INIT_ERROR,
-	OPERATE_INVALID_DEVICE_SIZE,
-	OPERATE_INCOMPATIBLE_PART,
-	OPERATE_INVALID_ADDR,
-	OPERATE_INVALID_SIZE,
-	OPERATE_WRITE_ERROR,
-	OPERATE_CHECKSUM_DIFF,
-	OPERATE_IGNORE
-} OPERATE_STATUS;
-
-typedef struct _REPARTITION_TABLE_INFO
-{
-	unsigned char version;
-	unsigned char unit;
-	unsigned char table_count;
-	unsigned char reserved;
-	unsigned int     table_tag;
-	unsigned short     table_offset;
-	unsigned short     table_size;
-} REPARTITION_TABLE_INFO;
-
-int dl_cmd_reply(uint32_t err);
-int dl_cmd_connect(struct dl_pkt * packet, void *arg);
-int dl_cmd_start(struct dl_pkt * packet, void *arg);
-int dl_cmd_midst(struct dl_pkt * packet, void *arg);
-int dl_cmd_end(struct dl_pkt * packet, void *arg);
-int dl_cmd_read_start(struct dl_pkt * packet, void *arg);
-int dl_cmd_read_midst(struct dl_pkt * packet, void *arg);
-int dl_cmd_read_end(struct dl_pkt * packet, void *arg);
-int dl_cmd_erase(struct dl_pkt * packet, void *arg);
-int dl_cmd_repartition(struct dl_pkt * pakcet, void *arg);
-int dl_cmd_reboot (struct dl_pkt *pakcet, void *arg);
-int dl_powerdown_device(struct dl_pkt *packet, void *arg);
-int dl_cmd_read_mcptype(struct dl_pkt * packet, void *arg);
-int dl_cmd_check_rootflag(struct dl_pkt * packet, void *arg);
-int dl_cmd_get_uid(struct dl_pkt *packet, void *arg);
-int dl_cmd_get_chip_uid(struct dl_pkt *packet, void *arg);
-int dl_cmd_get_uid_x86(struct dl_pkt *packet, void *arg);
-int dl_cmd_end_process(struct dl_pkt *packet, void *arg);
-int dl_cmd_read_ref_info(struct dl_pkt *packet, void *arg);
-int dl_cmd_disable_hdlc(struct dl_pkt *packet, void *arg);
-int dl_cmd_write_datetime(struct dl_pkt *packet, void *arg);
-int dl_cmd_init(void);
-#endif /*DL_CMD_PROC_H */
+extern int do_download();
+#endif

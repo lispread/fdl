@@ -1,9 +1,3 @@
-/*
- * Copyright (c) 2018, UNISOC Incorporated
- *
- * SPDX-License-Identifier: Apache-2.0
- */
-
 #ifndef FDL_CRC_H
 #define FDL_CRC_H
 #ifdef __cplusplus
@@ -28,7 +22,8 @@ extern   "C"
 unsigned int crc_16_l_calc (char *buf_ptr,unsigned int len);
 
 unsigned short frm_chk (const unsigned short *src, int len);
-
+unsigned short EndianConv_16 (unsigned short value);
+unsigned int EndianConv_32 (unsigned int value);
 #ifdef __cplusplus
 }
 #endif
