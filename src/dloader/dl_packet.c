@@ -4,6 +4,7 @@
 #include "dl_packet.h"
 #include "dl_crc.h"
 #include "dl_channel.h"
+#include "dl_cmd_common.h"
 
 int act_as_romcode;
 int message_format;
@@ -120,15 +121,15 @@ void FDL_PacketDoIdle (void)
 		if (packet_ptr->data_size > MAX_PKT_SIZE) {
 			packet_receiving = NULL;
 			dl_free_packet (packet_ptr);
-			printk("data_size error : datasize = %d  MAX_PKT_SIZE = %d\n",
+			FDL_PRINT("data_size error : datasize = %d  MAX_PKT_SIZE = %d\n",
 				packet_ptr->data_size, MAX_PKT_SIZE);
-			printk("\n%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+			FDL_PRINT("\n%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 			SEND_ERROR_RSP (BSL_REP_VERIFY_ERROR)
 			//return;
 		}
 
 		// try handle this input data
-		//printk(" %02x  %d\n", ch1, packet_ptr->pkt_state);
+		//FDL_PRINT(" %02x  %d\n", ch1, packet_ptr->pkt_state);
 		switch (packet_ptr->pkt_state) {
 		case PKT_NONE:
 
@@ -167,10 +168,10 @@ void FDL_PacketDoIdle (void)
 					              packet_ptr->data_size);
 
 				if (0 != crc) {
-					printk("\n%s %s %d\n",
+					FDL_PRINT("\n%s %s %d\n",
 					       __FILE__, __FUNCTION__, __LINE__);
-					printk("Richard Feng mask crc check");
-					printk("\n%s %s %d\n",
+					FDL_PRINT("Richard Feng mask crc check");
+					FDL_PRINT("\n%s %s %d\n",
 					       __FILE__, __FUNCTION__, __LINE__);
 					crc = 0;
 				}
@@ -349,9 +350,9 @@ void dl_send_ack (dl_cmd_type_t  pkt_type)
 	tmp_packet_ptr = (dl_packet_t *) ack_packet_dst;
 
 	send_len = FDL_DataProcess (packet_ptr, tmp_packet_ptr);
-	//printk("pkt->body.type=%d\n" , packet_ptr->body.type);
-	//printk("before send_len = %d\n" , send_len);
+	//FDL_PRINT("pkt->body.type=%d\n" , packet_ptr->body.type);
+	//FDL_PRINT("before send_len = %d\n" , send_len);
 	FDL_WritePacket ( (char *) (& (tmp_packet_ptr->body)), send_len);
-	//printk("send_len = %d" , send_len);
+	//FDL_PRINT("send_len = %d" , send_len);
 
 }

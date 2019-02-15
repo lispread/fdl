@@ -4,6 +4,7 @@
 #include <uart.h>
 #include <stdlib.h>
 #include "dl_channel.h"
+#include "dl_cmd_common.h"
 
 #define BOOT_FLAG_USB                   (0x5A)
 #define BOOT_FLAG_UART1                 (0x6A)
@@ -82,10 +83,10 @@ struct FDL_ChannelHandler *FDL_ChannelGet()
 int dl_channel_init()
 {
 	struct FDL_ChannelHandler *dl_Channel;
-	printk("Unisoc uart\n");
+	FDL_PRINT("Unisoc uart\n");
 	uart_fdl_dev = device_get_binding(UART_0);
 	if (uart_fdl_dev == NULL) {
-		printk("uart_fdl_dev is NULL\n");
+		FDL_PRINT("uart_fdl_dev is NULL\n");
         return -1;
 	}
 
