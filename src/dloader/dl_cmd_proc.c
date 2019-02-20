@@ -75,7 +75,7 @@ int _parse_repartition_header(u8_t * data, REPARTITION_TABLE_INFO * info, u8_t *
 	pointer += 2;
 	info->table_size = *(unsigned short *)pointer;
 	pointer += 2;
-	printk("%s: version(%d),unit(%d), table_count(%d), table_tag(%d), table_offset(%d), table_size(%d)\n",
+	FDL_PRINT("%s: version(%d),unit(%d), table_count(%d), table_tag(%d), table_offset(%d), table_size(%d)\n",
 		__FUNCTION__, info->version, info->unit, info->table_count, info->table_tag, info->table_offset,
 		info->table_size);
 	*list = pointer;
@@ -84,7 +84,7 @@ int _parse_repartition_header(u8_t * data, REPARTITION_TABLE_INFO * info, u8_t *
 
 int dl_cmd_write_connect(dl_packet_t *packet, void *arg)
 {
-	printk("dl_cmd_write_connect \n");
+	FDL_PRINT("dl_cmd_write_connect \n");
 	dl_send_ack(BSL_REP_ACK);
 	return 0;
 }
@@ -92,7 +92,7 @@ int dl_cmd_write_connect(dl_packet_t *packet, void *arg)
 int dl_cmd_write_start (dl_packet_t *packet, void *arg)
 {
 
-    printk("start_addr %x\n",start_addr);
+    FDL_PRINT("start_addr %x\n",start_addr);
 	memcpy(&start_addr, (void *)(packet->body.content), sizeof(start_addr));
 	memcpy(&partition_size, (void *)(packet->body.content+sizeof(start_addr)), sizeof(start_addr));
 
@@ -111,7 +111,7 @@ int dl_cmd_write_midst(dl_packet_t *packet, void *arg)
 	memcpy(s_iram_address, (void *)(packet->body.content), packet->body.size);
 	s_iram_address += packet->body.size;
 	_send_reply(OPERATE_SUCCESS);
-	//printk("dl_cmd_write_midst %x ",s_iram_address); //every packet
+	//FDL_PRINT("dl_cmd_write_midst %x ",s_iram_address); //every packet
 	return 0;
 }
 
@@ -122,7 +122,7 @@ int dl_cmd_write_end (dl_packet_t *packet, void *arg)
 	struct device *dev = device_get_binding(FLASH_LABEL);
 
 	if (dev == NULL) {
-		printk("Can not open device: %s.\n", FLASH_LABEL);
+		FDL_PRINT("Can not open device: %s.\n", FLASH_LABEL);
 		_send_reply(OPERATE_SYSTEM_ERROR);
 		return -1;
 	}
@@ -132,22 +132,22 @@ int dl_cmd_write_end (dl_packet_t *packet, void *arg)
 	offset = start_addr - NORFLASH_ADDRESS;
 
 	flash_write_protection_set(dev, false);
-	printk("Erase flash address: 0x%x size: 0x%x.\n", offset, partition_size);
+	FDL_PRINT("Erase flash address: 0x%x size: 0x%x.\n", offset, partition_size);
 	ret = flash_erase(dev, offset, partition_size);
 	if (ret) {
-		printk("Erase flash failed.\n");
+		FDL_PRINT("Erase flash failed.\n");
 		_send_reply(OPERATE_SYSTEM_ERROR);
 		return -1;
 	}
 
-	printk("Write flash start...%x\n",offset);
+	FDL_PRINT("Write flash start...%x\n",offset);
 	ret = flash_write(dev, offset, s_iram_address, partition_size);
 	if (ret) {
-		printk("wirte flash failed.\n");
+		FDL_PRINT("wirte flash failed.\n");
 		_send_reply(OPERATE_SYSTEM_ERROR);
 		return -1;
 	}
-	printk("Write success.\n");
+	FDL_PRINT("Write success.\n");
 	flash_write_protection_set(dev, true);
 
 	_send_reply(op_res);

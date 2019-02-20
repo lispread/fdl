@@ -21,7 +21,7 @@ void main(void)
 
     ret = dl_channel_init();
 	if(ret) {
-		printk("Init channel failed.\n");
+		FDL_PRINT("Init channel failed.\n");
 		return;
 	}
 

@@ -2,7 +2,13 @@
 #define _DL_COMMON_
 
 #include <zephyr.h>
+#include <misc/printk.h>
 
+#if defined(FDL_DEBUG)
+#define FDL_PRINT(...)  printk(__VA_ARGS__)
+#else
+#define FDL_PRINT(...)
+#endif
 /*loader_common.h has the same define*/
 #define NV_HEAD_MAGIC	(0x00004e56)
 #define NV_VERSION		(101)

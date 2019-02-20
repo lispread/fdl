@@ -39,10 +39,10 @@ void dl_cmd_handler(void)
 	u32_t cmds_cnt = sizeof(dl_cmds) / sizeof(struct dl_cmd);
 	struct dl_cmd *cmd;
 	struct dl_packet *pkt;
-	printk("%s:enter\n", __FUNCTION__);
+	FDL_PRINT("%s:enter\n", __FUNCTION__);
 	for (;;) {
 		pkt = dl_get_packet();
-		//printk("%x %x\n ", pkt->body.type,pkt->body.size);
+		//FDL_PRINT("%x %x\n ", pkt->body.type,pkt->body.size);
 		pkt->body.type = (pkt->body.type >> 8 | pkt->body.type << 8);
 		pkt->body.size = (pkt->body.size >> 8 | pkt->body.size << 8);
 		for (i = 0, cmd = dl_cmds; i < cmds_cnt; i++, cmd++) {
@@ -67,7 +67,7 @@ int do_download()
 	dl_packet_t ack_packet;
 	DA_INFO_T Da_Info;
 
-	printk("%s:enter\n", __FUNCTION__);
+	FDL_PRINT("%s:enter\n", __FUNCTION__);
 	dl_packet_init ();
 
 	/* uart download doesn't supoort disable hdlc, so need check it */
