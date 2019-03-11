@@ -119,10 +119,10 @@ int dl_cmd_write_end (dl_packet_t *packet, void *arg)
 {
 	int32_t  ret,op_res = OPERATE_SUCCESS;
 	int32_t offset;
-	struct device *dev = device_get_binding(FLASH_LABEL);
+	struct device *dev = device_get_binding(DT_FLASH_DEV_NAME);
 
 	if (dev == NULL) {
-		FDL_PRINT("Can not open device: %s.\n", FLASH_LABEL);
+		FDL_PRINT("Can not open device: %s.\n", DT_FLASH_DEV_NAME);
 		_send_reply(OPERATE_SYSTEM_ERROR);
 		return -1;
 	}
