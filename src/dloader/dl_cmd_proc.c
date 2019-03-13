@@ -7,9 +7,12 @@
 #include "dl_cmd_proc.h"
 #include "dl_crc.h"
 #include "dl_cmd_common.h"
+#ifdef FDL_DEBUG
+#include "mbedtls/md5.h"
+#endif
 
 static uint32_t start_addr=0;
-static uint32_t partition_size=0;
+static uint32_t recv_image_size=0;
 
 static __inline dl_cmd_type_t convert_operate_status(int err)
 {
@@ -94,10 +97,10 @@ int dl_cmd_write_start (dl_packet_t *packet, void *arg)
 
     FDL_PRINT("start_addr %x\n",start_addr);
 	memcpy(&start_addr, (void *)(packet->body.content), sizeof(start_addr));
-	memcpy(&partition_size, (void *)(packet->body.content+sizeof(start_addr)), sizeof(start_addr));
+	memcpy(&recv_image_size, (void *)(packet->body.content+sizeof(start_addr)), sizeof(start_addr));
 
 	start_addr = EndianConv_32(start_addr);
-	partition_size = EndianConv_32(partition_size);
+	recv_image_size = EndianConv_32(recv_image_size);
 
 	_send_reply(OPERATE_SUCCESS);
 	return 0;
@@ -118,9 +121,16 @@ int dl_cmd_write_midst(dl_packet_t *packet, void *arg)
 int dl_cmd_write_end (dl_packet_t *packet, void *arg)
 {
 	int32_t  ret,op_res = OPERATE_SUCCESS;
-	int32_t offset;
+	int32_t offset,earse_size;
 	struct device *dev = device_get_binding(FLASH_LABEL);
+#ifdef FDL_DEBUG
+    mbedtls_md5_context md5_ctx,md5_ctx_f_one;
+    int i;
+	uint32_t image_len;
+	unsigned char md5sum[16];
 
+	image_len = s_iram_address - CONFIG_SYS_LOAD_ADDR;
+#endif
 	if (dev == NULL) {
 		FDL_PRINT("Can not open device: %s.\n", FLASH_LABEL);
 		_send_reply(OPERATE_SYSTEM_ERROR);
@@ -128,12 +138,28 @@ int dl_cmd_write_end (dl_packet_t *packet, void *arg)
 	}
 
 	s_iram_address = (char *)CONFIG_SYS_LOAD_ADDR;
+#ifdef FDL_DEBUG
+    mbedtls_md5_init( &md5_ctx );
+	if( ( ret = mbedtls_md5_starts_ret( &md5_ctx ) ) != 0 )
+        FDL_PRINT("md5 start: .\n");
+    if( ( ret = mbedtls_md5_update_ret( &md5_ctx, s_iram_address, image_len) ) != 0 )
+        FDL_PRINT("md5 update: .\n");
+ 	if( ( ret = mbedtls_md5_finish_ret( &md5_ctx, md5sum ) ) != 0 )
+		FDL_PRINT("md5 finish: .\n");
+
+	for(i=0;i<16;i++) {
+		FDL_PRINT("%x ",md5sum[i]);
+	}
+	FDL_PRINT("\n");
+#endif
 
 	offset = start_addr - NORFLASH_ADDRESS;
 
 	flash_write_protection_set(dev, false);
-	FDL_PRINT("Erase flash address: 0x%x size: 0x%x.\n", offset, partition_size);
-	ret = flash_erase(dev, offset, partition_size);
+	
+	earse_size = ROUND_UP(recv_image_size,NORFLASH_SECTOR_SIZE);
+	FDL_PRINT("Erase flash address: 0x%x size: 0x%x 0x%x.\n", offset,recv_image_size, earse_size);
+	ret = flash_erase(dev, offset, earse_size);
 	if (ret) {
 		FDL_PRINT("Erase flash failed.\n");
 		_send_reply(OPERATE_SYSTEM_ERROR);
@@ -141,7 +167,7 @@ int dl_cmd_write_end (dl_packet_t *packet, void *arg)
 	}
 
 	FDL_PRINT("Write flash start...%x\n",offset);
-	ret = flash_write(dev, offset, s_iram_address, partition_size);
+	ret = flash_write(dev, offset, s_iram_address, recv_image_size);
 	if (ret) {
 		FDL_PRINT("wirte flash failed.\n");
 		_send_reply(OPERATE_SYSTEM_ERROR);
@@ -151,6 +177,21 @@ int dl_cmd_write_end (dl_packet_t *packet, void *arg)
 	flash_write_protection_set(dev, true);
 
 	_send_reply(op_res);
+#ifdef FDL_DEBUG
+	mbedtls_md5_init( &md5_ctx_f_one );
+	flash_read(dev,offset,s_iram_address, image_len);
+	if( ( ret = mbedtls_md5_starts_ret( &md5_ctx_f_one ) ) != 0 )
+        FDL_PRINT("md5 start: .\n");
+	if( ( ret = mbedtls_md5_update_ret( &md5_ctx_f_one, s_iram_address, image_len ) ) != 0 )
+        FDL_PRINT("md5 update: .\n");
+ 	if( ( ret = mbedtls_md5_finish_ret( &md5_ctx_f_one, md5sum ) ) != 0 )
+		FDL_PRINT("md5 finish: .\n");
+
+	for(i=0;i<16;i++) {
+		FDL_PRINT("%x ",md5sum[i]);
+	}
+	FDL_PRINT("\n");
+#endif
 
 	return 0;
 }

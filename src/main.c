@@ -6,6 +6,7 @@
 #include <misc/printk.h>
 #include <device.h>
 #include <uart.h>
+#include <hal_sfc.h>
 
 #include "dloader/dl_channel.h"
 #include "dloader/dl_cmd_common.h"
@@ -18,7 +19,9 @@
 void main(void)
 {
 	int ret;
+	unsigned int  key;
 
+	key = irq_lock_primask();
     ret = dl_channel_init();
 	if(ret) {
 		FDL_PRINT("Init channel failed.\n");
@@ -26,6 +29,6 @@ void main(void)
 	}
 
 	do_download();
-
+	irq_unlock_primask(key);
 	while(1) {}
 }

@@ -3,7 +3,7 @@
 
 #include <zephyr.h>
 #include <misc/printk.h>
-
+//#define FDL_DEBUG
 #if defined(FDL_DEBUG)
 #define FDL_PRINT(...)  printk(__VA_ARGS__)
 #else
@@ -15,6 +15,7 @@
 #define NV_HEAD_LEN	(512)
 
 #define NORFLASH_ADDRESS 0x2000000
+#define NORFLASH_SECTOR_SIZE 0x1000
 #define BOOTLOADER_HEADER_OFFSET 0x20
 
 #define PART_SAME 1
